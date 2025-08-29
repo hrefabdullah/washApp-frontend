@@ -4,9 +4,18 @@ import { io } from 'socket.io-client';
 const Chat = () => {
   const refSocket = useRef(null);
   const messagesEndRef = useRef(null);
+  const containerRef = useRef(null);
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+
+  // Update height on mobile keyboard show/hide
+  useEffect(() => {
+    const handleResize = () => setWindowHeight(window.innerHeight);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Connect to socket
   useEffect(() => {
@@ -16,13 +25,9 @@ const Chat = () => {
       console.log('Websocket connected:', refSocket.current.id);
     });
 
-    // Receive messages
     refSocket.current.on('chat-message', (msg) => {
-      // Determine if the message is from self
       msg.self = msg.senderId === refSocket.current.id;
-
       setMessages((prev) => {
-        // Avoid duplicates by checking id
         if (prev.some((m) => m.id === msg.id)) return prev;
         return [...prev, msg];
       });
@@ -42,47 +47,43 @@ const Chat = () => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    let hour = new Date().toLocaleString().split(",")[1].split(":")[0].trim();
-    console.log(hour)
-    if (hour > 12) {
-      hour = hour - 12
-    }
-    let period = hour >= 12 ? "AM" : "PM";
+    let date = new Date();
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+    let period = hours >= 12 ? 'PM' : 'AM';
+    if (hours > 12) hours -= 12;
 
-    const fullTime = `${hour}:${new Date().toLocaleString().split(":")[1].trim()} ${period}`;
-    console.log(fullTime)
+    const fullTime = `${hours}:${minutes.toString().padStart(2, '0')} ${period}`;
 
     const msg = {
-      id: generateId(),               // unique ID
+      id: generateId(),
       msg: input,
       timestamp: fullTime,
-      senderId: refSocket.current.id, // identify sender
+      senderId: refSocket.current.id,
     };
 
-    // Send to server
     refSocket.current.emit('chat-message', msg);
-
     setInput('');
   };
 
   return (
-    <div className="max-w-md mx-auto h-screen flex flex-col p-4 bg-gray-50">
+    <div
+      ref={containerRef}
+      className="max-w-md mx-auto flex flex-col p-4 bg-gray-50"
+      style={{ height: windowHeight }}
+    >
       {/* Chat messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-100 rounded-lg shadow">
         <ul className="flex flex-col space-y-2">
           {messages.map((msg) => (
-            <li
-              key={msg.id}
-              className={`flex ${msg.self ? 'justify-end' : 'justify-start'}`}
-            >
+            <li key={msg.id} className={`flex ${msg.self ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-xs px-4 py-1 pt-1.5 rounded-xl shadow break-words ${msg.self
-                    ? 'bg-green-200 text-right rounded-br-none'
-                    : 'bg-white text-left rounded-bl-none'
-                  }`}
+                className={`max-w-xs px-4 py-1 pt-1.5 rounded-xl shadow break-words ${
+                  msg.self ? 'bg-green-200 text-right rounded-br-none' : 'bg-white text-left rounded-bl-none'
+                }`}
               >
-                <div className='flex gap-2 items-end h-5'>
-                  <div className='text-md lg:text-md'>{msg.msg}</div>
+                <div className="flex gap-2 items-end h-5">
+                  <div className="text-md lg:text-md">{msg.msg}</div>
                   <div className="text-[10px] text-gray-500">{msg.timestamp}</div>
                 </div>
               </div>
