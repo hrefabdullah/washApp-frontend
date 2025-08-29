@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 
 const Chat = () => {
   const refSocket = useRef(null);
+  const inputFieldRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   const [messages, setMessages] = useState([]);
@@ -55,10 +56,11 @@ const Chat = () => {
 
     refSocket.current.emit('chat-message', msg);
     setInput('');
+    inputFieldRef.current.focus();
   };
 
   return (
-    <div className="max-w-md mx-auto flex flex-col p-4 bg-gray-50 h-screen">
+    <div className="max-w-md mx-auto flex flex-col p-4 bg-gray-50 h-[85vh] lg:h-[90vh]">
       {/* Chat messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-100 rounded-lg shadow">
         <ul className="flex flex-col space-y-2">
@@ -85,10 +87,12 @@ const Chat = () => {
       {/* Input */}
       <form className="flex mt-2 bg-gray-200 rounded-lg p-2" onSubmit={handleSubmit}>
         <input
+          ref={inputFieldRef}
           type="text"
           placeholder="Type a message..."
           className="flex-1 px-3 py-2 rounded-l-lg focus:outline-none"
           value={input}
+
           onChange={(e) => setInput(e.target.value)}
         />
         <button
