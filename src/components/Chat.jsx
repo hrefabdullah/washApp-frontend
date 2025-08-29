@@ -10,7 +10,7 @@ const Chat = () => {
 
   // Connect to socket
   useEffect(() => {
-    refSocket.current = io('http://localhost:8000', { transports: ['websocket'] });
+    refSocket.current = io('https://washapp-production-589d.up.railway.app', { transports: ['websocket'] });
 
     refSocket.current.on('connect', () => {
       console.log('Websocket connected:', refSocket.current.id);
