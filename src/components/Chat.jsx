@@ -56,7 +56,7 @@ const Chat = () => {
 
     refSocket.current.emit('chat-message', msg);
     setInput('');
-    inputFieldRef.current.focus();
+    // inputFieldRef.current.focus();
   };
 
   return (
